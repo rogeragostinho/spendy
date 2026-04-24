@@ -52,4 +52,8 @@ class User extends Authenticatable
     public function groups(): BelongsToMany {
         return $this->belongsToMany(Group::class)->withPivot('role', 'joined_at');
     }
+
+    public function expenses(): BelongsToMany {
+        return $this->belongsToMany(Expense::class, 'expense_splits');
+    }
 }
