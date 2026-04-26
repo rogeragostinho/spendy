@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Expense;
 use App\Models\Group;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -85,19 +87,6 @@ class GroupController extends Controller
         ]);
     }
 
-    private function permissionForUpdateOrDeleteGroupVerify(Request $request, Group $group)
-    {
-        if (!$group->users->contains($request->user())) {
-            abort(403, 'Não pode realizar esta operação');
-        }
-
-        $user = $group->users()->find($request->user());
-
-        if ($user->pivot->role != 'admin') {
-            abort(403, 'Não pode realizar esta operação');
-        }
-    }
-
     public function join(Request $request, int $id)
     {
         $validated = $request->validate([
@@ -117,5 +106,38 @@ class GroupController extends Controller
         return response()->json([
             'message' => 'Adicionado ao grupo com sucesso'
         ]);
+    }
+
+    public function expenses(Request $request, int $id) {
+        // verifica se usuário pertence ao grupo
+        $this->verifyGroupMembership($request->user(), $id);
+
+        return response()->json([
+            'expenses' => Expense::where('group_id', $id)->get()
+        ]);
+    }
+
+    // ========================================
+    // ========== OTHER FUNCTIONS =============
+    // ========================================
+
+    private function permissionForUpdateOrDeleteGroupVerify(Request $request, Group $group)
+    {
+        if (!$group->users->contains($request->user())) {
+            abort(403, 'Não pode realizar esta operação');
+        }
+
+        $user = $group->users()->find($request->user());
+
+        if ($user->pivot->role != 'admin') {
+            abort(403, 'Não pode realizar esta operação');
+        }
+    }
+
+    private function verifyGroupMembership(User $user, int $group_id)
+    {
+        if (!$user->groups->contains(Group::find($group_id))) {
+            abort(403, 'Não pode realizar esta operação');
+        }
     }
 }

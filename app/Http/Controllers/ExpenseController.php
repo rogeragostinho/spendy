@@ -95,22 +95,6 @@ class ExpenseController extends Controller
         ]);
     }
 
-    public function getByGroup(Request $request, int $group_id)
-    {
-        return response()->json([
-            'expenses' => $request->user()
-                ->expenses()
-                ->where('group_id', $group_id)
-                ->get()
-        ]);
-        return response()->json("entrou");
-        return response()->json([
-            'expenses' => Expense::where('group_id', $group_id)
-                ->whereHas('users', fn($q) => $q->where('id', $request->user()->id))
-                ->get()
-        ]);
-    }
-
     public function addMember(Request $request, int $id)
     {
         $validated = $request->validate([
@@ -191,8 +175,6 @@ class ExpenseController extends Controller
         if (!$expense->users->contains($request->user())) {
             abort(403, 'Não pode realizar esta operação');
         }
-
-        $user = $expense->users()->find($request->user());
 
         if ($expense->paid_by != $request->user()->id) {
             abort(403, 'Não pode realizar esta operação');
