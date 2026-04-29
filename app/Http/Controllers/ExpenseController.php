@@ -6,6 +6,7 @@ use App\Models\Expense;
 use App\Models\Group;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ExpenseController extends Controller
 {
@@ -115,15 +116,15 @@ class ExpenseController extends Controller
             ], 403);
         }
 
-        // FIXME: esta parte está errada ou frágil, usar transação
-        $expense->users()->attach($validated['user_id'], [
-            'amount_owed' => 0
-        ]);
+        DB::transaction(function () use ($expense, $validated) { // closure
+            $expense->users()->attach($validated['user_id'], [
+                'amount_owed' => 0
+            ]);
 
-        $expense->load('users'); 
+            $expense->load('users'); 
 
-        $this->defineAmountOwed($expense);
-        //
+            $this->defineAmountOwed($expense); // nota de atenção
+        });
 
         return response()->json([
             'message' => 'Membro foi adicionado à despesa'
