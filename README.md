@@ -31,7 +31,7 @@ php artisan key:generate
 
 ### 5. Configurar a base de dados
 
-Edite o arquivo `.env` e configure as variáveis:
+Edite o arquivo `.env` e configure:
 
 ```
 DB_DATABASE=nome_da_base
@@ -39,15 +39,13 @@ DB_USERNAME=seu_usuario
 DB_PASSWORD=sua_senha
 ```
 
-Em seguida, execute as migrações:
+Depois execute:
 
 ```bash
 php artisan migrate
 ```
 
 ### 6. Instalar dependências do frontend (opcional)
-
-Caso o projeto utilize Vite/NPM:
 
 ```bash
 npm install
@@ -68,7 +66,28 @@ http://127.0.0.1:8000
 
 ---
 
-### ⚠️ Observações
+## ⚠️ Possíveis erros
 
-* Certifique-se de ter o PHP, Composer, Node.js e MySQL instalados.
-* Caso ocorra algum erro, verifique o arquivo `.env` e as permissões da base de dados.
+### Erro ao rodar `composer install` (ext-dom / ext-xml)
+
+Se aparecer erro relacionado a `ext-dom` ou `ext-xml`, instale as extensões necessárias do PHP:
+
+```bash
+sudo apt update
+sudo apt install php-xml
+```
+
+Depois disso, execute novamente:
+
+```bash
+composer install
+```
+
+---
+
+### Observações
+
+* Certifique-se de ter PHP, Composer, Node.js e MySQL instalados.
+* Não use `--ignore-platform-req` em produção.
+* Verifique sempre o `.env` se algo não funcionar.
+
