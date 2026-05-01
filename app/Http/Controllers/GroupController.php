@@ -87,7 +87,7 @@ class GroupController extends Controller
         ]);
     }
 
-    public function join(Request $request, int $id)
+    public function join(Request $request)
     {
         $validated = $request->validate([
             'invite_code' => 'required'
