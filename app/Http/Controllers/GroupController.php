@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Expense;
+use App\Models\ExpenseSplit;
 use App\Models\Group;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -108,12 +109,51 @@ class GroupController extends Controller
         ]);
     }
 
-    public function expenses(Request $request, int $id) {
+    public function expenses(Request $request, int $id)
+    {
         // verifica se usuário pertence ao grupo
         $this->verifyGroupMembership($request->user(), $id);
 
         return response()->json([
             'expenses' => Expense::where('group_id', $id)->get()
+        ]);
+    }
+
+    public function balances(Request $request, int $id)
+    {
+        $this->verifyGroupMembership($request->user(), $id);
+
+        $group = Group::findOrFail($id);
+
+        $splits = ExpenseSplit::query()
+            ->where('is_paid', false)
+            ->whereHas('expense', function ($query) use ($group) {
+                $query->where('group_id', $group->id);
+            })
+            ->with([
+                'user',
+                'expense.paidBy'
+            ])
+            ->get();
+
+        $balances = [];
+
+        foreach ($splits as $split) {
+            $user = $split->user;
+            $payer = $split->expense->paidBy;
+
+            if ($user->id === $payer->id) {
+                continue; // não deve a si mesmo
+            }
+
+            $balances[$user->name]['user'] = $user->name;
+
+            $balances[$user->name]['owes'][$payer->name] =
+                ($balances[$user->name]['owes'][$payer->name] ?? 0) + $split->amount_owed;
+        }
+
+        return response()->json([
+            'balances' => array_values($balances)
         ]);
     }
 
