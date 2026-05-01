@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ExpenseCreated;
 use App\Models\Expense;
 use App\Models\Group;
 use App\Models\User;
@@ -39,6 +40,8 @@ class ExpenseController extends Controller
         ]);
 
         $expense->load('users');
+
+        ExpenseCreated::dispatch($expense);
 
         return response()->json([
             'message' => 'Despesa criada com sucesso',
