@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/groups/{id}', [GroupController::class, 'destroy']);
     Route::post('/groups/{id}/join', [GroupController::class, 'join']);
     Route::get('/groups/{id}/expenses', [GroupController::class, 'expenses']);
+    Route::get("/groups/{id}/balances", [GroupController::class, 'balances']);
 
     Route::prefix('expenses')->group(function () {
         Route::controller(ExpenseController::class)->group(function () {

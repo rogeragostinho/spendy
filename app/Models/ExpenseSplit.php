@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ExpenseSplit extends Model
 {
@@ -14,4 +15,12 @@ class ExpenseSplit extends Model
         'amount_owed',
         'is_paid'
     ];
+
+    public function user() : BelongsTo {
+        return $this->belongsTo(User::class);
+    }
+
+    public function expense() : BelongsTo {
+        return $this->belongsTo(Expense::class);
+    }
 }

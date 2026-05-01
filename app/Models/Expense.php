@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Expense extends Model
@@ -17,5 +18,9 @@ class Expense extends Model
 
     public function users(): BelongsToMany {
         return $this->belongsToMany(User::class, 'expense_splits')->withPivot('amount_owed', 'is_paid');
+    }
+
+    public function paidBy() : BelongsTo {
+        return $this->belongsTo(User::class, 'paid_by');
     }
 }
