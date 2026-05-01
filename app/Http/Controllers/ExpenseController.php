@@ -25,15 +25,20 @@ class ExpenseController extends Controller
             'description' => 'required|string'
         ]);
 
-        $validated['paid_by'] = $request->user()->id;
+        $user = $request->user();
+
+        // Verificação de pertença ao grupo
+        $this->verifyGroupMembership($user, $validated['group_id']);
+
+        $validated['paid_by'] = $user->id;
 
         $expense = Expense::create($validated);
 
-        $expense->users()->attach($request->user()->id, [
+        $expense->users()->attach($user->id, [
             'amount_owed' => $expense->amount
         ]);
 
-        $expense->load('users'); // carrega para pegar os dados atualizados
+        $expense->load('users');
 
         return response()->json([
             'message' => 'Despesa criada com sucesso',
@@ -121,7 +126,7 @@ class ExpenseController extends Controller
                 'amount_owed' => 0
             ]);
 
-            $expense->load('users'); 
+            $expense->load('users');
 
             $this->defineAmountOwed($expense); // nota de atenção
         });
@@ -184,7 +189,7 @@ class ExpenseController extends Controller
 
     private function verifyGroupMembership(User $user, int $group_id)
     {
-        if (!$user->groups->contains(Group::find($group_id))) {
+        if (!$user->groups()->where('groups.id', $group_id)->exists()) {
             abort(403, 'Não pode realizar esta operação');
         }
     }
