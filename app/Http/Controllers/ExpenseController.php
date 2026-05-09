@@ -28,7 +28,6 @@ class ExpenseController extends Controller
 
         $user = $request->user();
 
-        // Verificação de pertença ao grupo
         $this->verifyGroupMembership($user, $validated['group_id']);
 
         $validated['paid_by'] = $user->id;
@@ -39,7 +38,9 @@ class ExpenseController extends Controller
             'amount_owed' => $expense->amount
         ]);
 
-        $expense->load('users');
+        $expense->refresh()->load(['users' => function ($query) {
+            $query->withPivot('amount_owed', 'is_paid');
+        }]);
 
         ExpenseCreated::dispatch($expense);
 
@@ -118,24 +119,27 @@ class ExpenseController extends Controller
 
         $this->verifyGroupMembership($newMember, $expense->group_id);
 
-        if ($expense->users->contains($newMember)) {
+        if ($expense->users()->where('users.id', $newMember->id)->exists()) {
             return response()->json([
                 'message' => 'Já está inserido na despesa'
             ], 403);
         }
 
-        DB::transaction(function () use ($expense, $validated) { // closure
+        DB::transaction(function () use ($expense, $validated) {
             $expense->users()->attach($validated['user_id'], [
                 'amount_owed' => 0
             ]);
 
-            $expense->load('users');
-
-            $this->defineAmountOwed($expense); // nota de atenção
+            $this->defineAmountOwed($expense);
         });
 
+        $expense->refresh()->load(['users' => function ($q) {
+            $q->withPivot('amount_owed', 'is_paid');
+        }]);
+
         return response()->json([
-            'message' => 'Membro foi adicionado à despesa'
+            'message' => 'Membro foi adicionado à despesa',
+            'participants' => $expense->users
         ]);
     }
 
@@ -149,13 +153,7 @@ class ExpenseController extends Controller
 
         $this->permissionForUpdateOrDeleteExpenseVerify($request, $expense);
 
-        $user = User::findOrFail($validated['user_id']);
-
-        $this->verifyGroupMembership($user, $expense->group_id);
-
-        $user = $expense->users->find($validated['user_id']);
-
-        $expense->users()->updateExistingPivot($user->id, [
+        $expense->users()->updateExistingPivot($validated['user_id'], [
             'is_paid' => true
         ]);
 
@@ -170,7 +168,11 @@ class ExpenseController extends Controller
 
     private function defineAmountOwed(Expense $expense)
     {
-        $amount_owed = (float)($expense->amount / $expense->users->count());
+        $expense->load('users');
+
+        $count = max($expense->users->count(), 1);
+
+        $amount_owed = (float) ($expense->amount / $count);
 
         foreach ($expense->users as $user) {
             $expense->users()->updateExistingPivot($user->id, [
