@@ -7,8 +7,8 @@ Siga os passos abaixo para configurar o projeto localmente:
 ### 1. Clonar o repositório
 
 ```bash
-git clone <url-do-repositorio>
-cd <nome-do-projeto>
+git clone https://github.com/rogeragostinho/spendy.git
+cd spendy
 ```
 
 ### 2. Instalar dependências do PHP
